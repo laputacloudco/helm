@@ -144,7 +144,6 @@ async function run() {
     const task = getInput("task");
     const version = getInput("version");
     const valueFiles = getValueFiles(getInput("value_files"));
-    const removeCanary = getInput("remove_canary");
     const timeout = getInput("timeout");
     const repository = getInput("repository");
     const dryRun = core.getInput("dry-run");
@@ -153,7 +152,6 @@ async function run() {
 
     core.debug(`param: track = "${track}"`);
     core.debug(`param: release = "${release}"`);
-    core.debug(`param: appName = "${appName}"`);
     core.debug(`param: namespace = "${namespace}"`);
     core.debug(`param: chart = "${chart}"`);
     core.debug(`param: chart_version = "${chartVersion}"`);
@@ -163,7 +161,6 @@ async function run() {
     core.debug(`param: version = "${version}"`);
     core.debug(`param: secrets = "${JSON.stringify(secrets)}"`);
     core.debug(`param: valueFiles = "${JSON.stringify(valueFiles)}"`);
-    core.debug(`param: removeCanary = ${removeCanary}`);
     core.debug(`param: timeout = "${timeout}"`);
     core.debug(`param: repository = "${repository}"`);
     core.debug(`param: atomic = "${atomic}"`);
@@ -184,7 +181,6 @@ async function run() {
     process.env.XDG_CONFIG_HOME = "/root/.helm/"
 
     if (dryRun) args.push("--dry-run");
-    if (appName) args.push(`--set=app.name=${appName}`);
     if (version) args.push(`--set=app.version=${version}`);
     if (chartVersion) args.push(`--version=${chartVersion}`);
     if (timeout) args.push(`--timeout=${timeout}`);
