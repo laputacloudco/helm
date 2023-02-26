@@ -43,20 +43,6 @@ async function status(state) {
   }
 }
 
-function releaseName(name, track) {
-  if (track !== "stable") {
-    return `${name}-${track}`;
-  }
-  return name;
-}
-
-function chartName(name) {
-  if (name === "app") {
-    return "/usr/src/charts/app";
-  }
-  return name;
-}
-
 function getValues(values) {
   if (!values) {
     return "{}";
@@ -134,15 +120,11 @@ function renderFiles(files, data) {
 /**
  * Makes a delete command for compatibility between helm 2 and 3.
  *
- * @param {string} helm
  * @param {string} namespace
  * @param {string} release
  */
-function deleteCmd(helm, namespace, release) {
-  if (helm === "helm3") {
-    return ["delete", "-n", namespace, release];
-  }
-  return ["delete", "--purge", release];
+function deleteCmd(namespace, release) {
+  return ["delete", "-n", namespace, release];
 }
 
 /**
@@ -154,17 +136,15 @@ async function run() {
     await status("pending");
 
     const track = getInput("track") || "stable";
-    const appName = getInput("release", required);
-    const release = releaseName(appName, track);
+    const release = getInput("release", required);
     const namespace = getInput("namespace", required);
-    const chart = chartName(getInput("chart", required));
+    const chart = getInput("chart", required);
     const chartVersion = getInput("chart_version");
     const values = getValues(getInput("values"));
     const task = getInput("task");
     const version = getInput("version");
     const valueFiles = getValueFiles(getInput("value_files"));
     const removeCanary = getInput("remove_canary");
-    const helm = getInput("helm") || "helm";
     const timeout = getInput("timeout");
     const repository = getInput("repository");
     const dryRun = core.getInput("dry-run");
@@ -199,14 +179,9 @@ async function run() {
       `--namespace=${namespace}`,
     ];
 
-    // Per https://helm.sh/docs/faq/#xdg-base-directory-support
-    if (helm === "helm3") {
-      process.env.XDG_DATA_HOME = "/root/.helm/"
-      process.env.XDG_CACHE_HOME = "/root/.helm/"
-      process.env.XDG_CONFIG_HOME = "/root/.helm/"
-    } else {
-      process.env.HELM_HOME = "/root/.helm/"
-    }
+    process.env.XDG_DATA_HOME = "/root/.helm/"
+    process.env.XDG_CACHE_HOME = "/root/.helm/"
+    process.env.XDG_CONFIG_HOME = "/root/.helm/"
 
     if (dryRun) args.push("--dry-run");
     if (appName) args.push(`--set=app.name=${appName}`);
@@ -216,13 +191,6 @@ async function run() {
     if (repository) args.push(`--repo=${repository}`);
     valueFiles.forEach(f => args.push(`--values=${f}`));
     args.push("--values=./values.yml");
-
-    // Special behaviour is triggered if the track is labelled 'canary'. The
-    // service and ingress resources are disabled. Access to the canary
-    // deployments can be routed via the main stable service resource.
-    if (track === "canary") {
-      args.push("--set=service.enabled=false", "--set=ingress.enabled=false");
-    }
 
     // If true upgrade process rolls back changes made in case of failed upgrade.
     if (atomic === true) {
@@ -244,21 +212,13 @@ async function run() {
       deployment: context.payload.deployment,
     });
 
-    // Remove the canary deployment before continuing.
-    if (removeCanary) {
-      core.debug(`removing canary ${appName}-canary`);
-      await exec.exec(helm, deleteCmd(helm, namespace, `${appName}-canary`), {
-        ignoreReturnCode: true
-      });
-    }
-
     // Actually execute the deployment here.
     if (task === "remove") {
-      await exec.exec(helm, deleteCmd(helm, namespace, release), {
+      await exec.exec("helm", deleteCmd(namespace, release), {
         ignoreReturnCode: true
       });
     } else {
-      await exec.exec(helm, args);
+      await exec.exec("helm", args);
     }
 
     await status(task === "remove" ? "inactive" : "success");
