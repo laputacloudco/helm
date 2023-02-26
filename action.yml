@@ -8,6 +8,9 @@ inputs:
   release:
     description: Helm release name. Will be combined with track if set. (required)
     required: true
+  repository:
+    description: The URL for a helm repo to come from. (optional)
+    required: false
   namespace:
     description: Kubernetes namespace name. (required)
     required: true
