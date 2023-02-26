@@ -1,6 +1,8 @@
-name: Helm Deploy Action
+name: Helm Deploy by LaputaCloud
 description: Deploys a helm chart
 author: laputacloudco
+icon: upload
+color: blue
 inputs:
   release:
     description: Helm release name. Will be combined with track if set. (required)
