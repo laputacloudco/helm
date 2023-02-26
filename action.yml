@@ -1,8 +1,6 @@
-name: Deliverybot Helm Action
+name: Helm Deploy Action
 description: Deploys a helm chart
-author: deliverybot
-icon: box
-color: gray-dark
+author: laputacloudco
 inputs:
   release:
     description: Helm release name. Will be combined with track if set. (required)
@@ -11,8 +9,7 @@ inputs:
     description: Kubernetes namespace name. (required)
     required: true
   chart:
-    description: Helm chart path. If set to "app" this will use the built in helm
-      chart found in this repository. (required)
+    description: Helm chart path. (required)
     required: true
   values:
     description: Helm chart values, expected to be a YAML or JSON string.
@@ -26,9 +23,6 @@ inputs:
     required: false
   atomic:
     description: If true, upgrade process rolls back changes made in case of failed upgrade. Defaults to true.
-    required: false
-  helm:
-    description: Helm binary to execute, one of [helm, helm3].
     required: false
   token:
     description: Github repository token. If included and the event is a deployment
